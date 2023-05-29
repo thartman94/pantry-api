@@ -2,31 +2,34 @@ from flask import Blueprint, request
 from marshmallow import fields, validate
 from config import db, ma
 from models import FoodItem
+import datetime
 
 food_item = Blueprint("food_item", __name__)
 
 
 class FoodItemSchema(ma.Schema):
     name = fields.Str(required=True, validate=[validate.Length(min=1, max=100)])
-    size_grams = fields.Int(required=True)
-    serving_size_grams = fields.Int(required=True)
-    fat_grams = fields.Int(required=True)
-    protien_grams = fields.Int(required=True)
-    carbs_grams = fields.Int(required=True)
+    brand = fields.Str(required=True, validate=[validate.Length(min=1, max=100)])
+    size = fields.Int(required=True)
+    serving_size = fields.Int(required=True)
+    calories = fields.Int(required=True)
+    fat = fields.Int(required=True)
+    protien = fields.Int(required=True)
+    carbs = fields.Int(required=True)
     exp_date = fields.Date(required=True)
-    inventory_id = fields.Int(required=True)
 
     class Meta:
         fields = (
             "id",
             "name",
-            "size_grams",
-            "serving_size_grams",
-            "fat_grams",
-            "protien_grams",
-            "carbs_grams",
+            "brand",
+            "size",
+            "serving_size",
+            "calories",
+            "fat",
+            "protien",
+            "carbs",
             "exp_date",
-            "inventory_id",
         )
 
 
@@ -48,54 +51,52 @@ def get_food_item(id):
 
 @food_item.route("/", methods=["POST"])
 def create_food_item():
-    if errors := FoodItemSchema().validate(request.json):
+    multiple_items = type(request.json) == list
+
+    if errors := FoodItemSchema(many=multiple_items).validate(request.json):
         return {"errors": errors}, 422
 
-    new_food_item = FoodItem(
-        inventory_id=request.json["inventory_id"],
-        name=request.json["name"],
-        size_grams=request.json["size_grams"],
-        serving_size_grams=request.json["serving_size_grams"],
-        fat_grams=request.json["fat_grams"],
-        protien_grams=request.json["protien_grams"],
-        carbs_grams=request.json["carbs_grams"],
-        exp_date=request.json["exp_date"],
-    )
-    db.session.add(new_food_item)
-    db.session.commit()
+    res = []
+    for item in request.json if multiple_items else [request.json]:
+        date = item["exp_date"].split("-")
+        new_food_item = FoodItem(
+            **{
+                **item,
+                "exp_date": datetime.date(int(date[0]), int(date[1]), int(date[2])),
+            }
+        )
+        db.session.add(new_food_item)
+        res.append(new_food_item)
 
-    return food_item_schema.jsonify(new_food_item)
+    db.session.commit()
+    return food_items_schema.jsonify(res)
 
 
 @food_item.route("/<id>", methods=["PUT"])
 def modify_food_item(id):
     food_item = FoodItem.query.get(id)
+    if not food_item:
+        return {"error": "Item not found"}, 404
 
     food_item.name = request.json["name"] if "name" in request.json else food_item.name
-    food_item.size_grams = (
-        request.json["size_grams"]
-        if "size_grams" in request.json
-        else food_item.size_grams
+    food_item.brand = (
+        request.json["brand"] if "brand" in request.json else food_item.brand
     )
-    food_item.serving_size_grams = (
-        request.json["serving_size_grams"]
-        if "serving_size_grams" in request.json
-        else food_item.serving_size_grams
+    food_item.size = request.json["size"] if "size" in request.json else food_item.size
+    food_item.calories = (
+        request.json["calories"] if "calories" in request.json else food_item.calories
     )
-    food_item.fat_grams = (
-        request.json["fat_grams"]
-        if "fat_grams" in request.json
-        else food_item.fat_grams
+    food_item.serving_size = (
+        request.json["serving_size"]
+        if "serving_size" in request.json
+        else food_item.serving_size
     )
-    food_item.protien_grams = (
-        request.json["protien_grams"]
-        if "protien_grams" in request.json
-        else food_item.protien_grams
+    food_item.fat = request.json["fat"] if "fat" in request.json else food_item.fat
+    food_item.protien = (
+        request.json["protien"] if "protien" in request.json else food_item.protien
     )
-    food_item.carbs_grams = (
-        request.json["carbs_grams"]
-        if "carbs_grams" in request.json
-        else food_item.carbs_grams
+    food_item.carbs = (
+        request.json["carbs"] if "carbs" in request.json else food_item.carbs
     )
     food_item.exp_date = (
         request.json["exp_date"] if "exp_date" in request.json else food_item.exp_date
@@ -108,6 +109,9 @@ def modify_food_item(id):
 @food_item.route("/<id>", methods=["DELETE"])
 def delete_food_item(id):
     food_item = FoodItem.query.get(id)
+    if not food_item:
+        return {"error": "Item not found"}, 404
+
     db.session.delete(food_item)
     db.session.commit()
     return food_item_schema.jsonify(food_item)
