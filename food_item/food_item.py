@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_cors import cross_origin
 from marshmallow import fields, validate
 from config import db, ma
 from models import FoodItem
@@ -38,18 +39,23 @@ food_items_schema = FoodItemSchema(many=True)
 
 
 @food_item.route("/", methods=["GET"])
+@cross_origin()
 def get_all_food_items():
     all_food_items = FoodItem.query.all()
+    response = food_items_schema.jsonify(all_food_items)
+    response.headers.add("Access-Control-Allow-Origin", "*")
     return food_items_schema.jsonify(all_food_items)
 
 
 @food_item.route("/<id>", methods=["GET"])
+@cross_origin()
 def get_food_item(id):
     food_item = FoodItem.query.get(id)
     return food_item_schema.jsonify(food_item)
 
 
 @food_item.route("/", methods=["POST"])
+@cross_origin()
 def create_food_item():
     multiple_items = type(request.json) == list
 
@@ -73,6 +79,7 @@ def create_food_item():
 
 
 @food_item.route("/<id>", methods=["PUT"])
+@cross_origin()
 def modify_food_item(id):
     food_item = FoodItem.query.get(id)
     if not food_item:
@@ -107,6 +114,7 @@ def modify_food_item(id):
 
 
 @food_item.route("/<id>", methods=["DELETE"])
+@cross_origin()
 def delete_food_item(id):
     food_item = FoodItem.query.get(id)
     if not food_item:
