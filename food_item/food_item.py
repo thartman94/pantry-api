@@ -15,7 +15,7 @@ class FoodItemSchema(ma.Schema):
     serving_size = fields.Int(required=True)
     calories = fields.Int(required=True)
     fat = fields.Int(required=True)
-    protien = fields.Int(required=True)
+    protein = fields.Int(required=True)
     carbs = fields.Int(required=True)
     exp_date = fields.Date(required=True)
 
@@ -28,7 +28,7 @@ class FoodItemSchema(ma.Schema):
             "serving_size",
             "calories",
             "fat",
-            "protien",
+            "protein",
             "carbs",
             "exp_date",
         )
@@ -99,8 +99,8 @@ def modify_food_item(id):
         else food_item.serving_size
     )
     food_item.fat = request.json["fat"] if "fat" in request.json else food_item.fat
-    food_item.protien = (
-        request.json["protien"] if "protien" in request.json else food_item.protien
+    food_item.protein = (
+        request.json["protein"] if "protein" in request.json else food_item.protein
     )
     food_item.carbs = (
         request.json["carbs"] if "carbs" in request.json else food_item.carbs

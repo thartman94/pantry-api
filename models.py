@@ -23,7 +23,7 @@ class FoodItem(db.Model):
     calories = db.Column(db.Integer)
     serving_size = db.Column(db.Integer)
     fat = db.Column(db.Integer)
-    protien = db.Column(db.Integer)
+    protein = db.Column(db.Integer)
     carbs = db.Column(db.Integer)
     exp_date = db.Column(db.Date)
 
@@ -35,7 +35,7 @@ class FoodItem(db.Model):
         serving_size,
         calories,
         fat,
-        protien,
+        protein,
         carbs,
         exp_date,
     ):
@@ -45,6 +45,6 @@ class FoodItem(db.Model):
         self.serving_size = serving_size
         self.calories = calories
         self.fat = fat
-        self.protien = protien
+        self.protein = protein
         self.carbs = carbs
         self.exp_date = exp_date
