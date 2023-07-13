@@ -3,7 +3,7 @@ from flask_cors import cross_origin
 from marshmallow import fields, validate
 from config import db, ma
 from models import FoodItem
-import datetime
+from datetime import datetime
 
 food_item = Blueprint("food_item", __name__)
 
@@ -64,11 +64,12 @@ def create_food_item():
 
     res = []
     for item in request.json if multiple_items else [request.json]:
-        date = item["exp_date"].split("-")
         new_food_item = FoodItem(
             **{
                 **item,
-                "exp_date": datetime.date(int(date[0]), int(date[1]), int(date[2])),
+                "exp_date": datetime.strptime(
+                    request.json["exp_date"], "%Y-%m-%d"
+                ).date(),
             }
         )
         db.session.add(new_food_item)
@@ -106,7 +107,9 @@ def modify_food_item(id):
         request.json["carbs"] if "carbs" in request.json else food_item.carbs
     )
     food_item.exp_date = (
-        request.json["exp_date"] if "exp_date" in request.json else food_item.exp_date
+        datetime.strptime(request.json["exp_date"], "%Y-%m-%d").date()
+        if "exp_date" in request.json
+        else food_item.exp_date
     )
     db.session.commit()
 
